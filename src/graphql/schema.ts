@@ -5,32 +5,21 @@ import type { GraphQLSchema } from 'graphql'
 
 // Baca SDL per fitur
 const userSDL = readFileSync(join(process.cwd(), 'src', 'graphql', 'schema', 'user.graphql'), 'utf-8')
+const mahasiswaSDL = readFileSync(join(process.cwd(), 'src', 'graphql', 'schema', 'mahasiswa.graphql'), 'utf-8')
+const alumniSDL = readFileSync(join(process.cwd(), 'src', 'graphql', 'schema', 'alumni.graphql'), 'utf-8')
+const pekerjaanSDL = readFileSync(join(process.cwd(), 'src', 'graphql', 'schema', 'pekerjaanAlumni.graphql'), 'utf-8')
+const fileSDL = readFileSync(join(process.cwd(), 'src', 'graphql', 'schema', 'file.graphql'), 'utf-8')
 
-// Lazy-load resolver to reduce cold-start overhead in serverless
-// Each wrapper calls dynamic import on first use.
-const makeLazy = (importPath: string, exportName = 'default') => {
-  let cached: any = null
-  return async function lazyResolver(...args: any[]) {
-    if (!cached) {
-      // dynamic import
-      const mod = await import(importPath)
-      cached = mod[exportName]
-    }
-    // call resolver field; if top-level object (Query/Mutation), we merge
-    // but graphql-yoga expects an object of resolvers; we'll return cached
-    return cached
-  }
-}
-
-// Note: graphql-yoga's createSchema requires resolvers object sync or async.
-// We'll import resolvers normally to keep implementation simple and reliable.
-// Using dynamic import at module load would complicate schema creation; so
-// for simplicity we import the resolver directly here (it's still modular).
+// Static resolver imports
 import userResolver from './resolvers/user.resolver'
+import mahasiswaResolver from './resolvers/mahasiswa.resolver'
+import alumniResolver from './resolvers/alumni.resolver'
+import pekerjaanResolver from './resolvers/pekerjaanAlumni.resolver'
+import fileResolver from './resolvers/file.resolver'
 
 export const schema: GraphQLSchema = createSchema({
-  typeDefs: [userSDL],
-  resolvers: [userResolver]
+  typeDefs: [userSDL, mahasiswaSDL, alumniSDL, pekerjaanSDL, fileSDL],
+  resolvers: [userResolver, mahasiswaResolver, alumniResolver, pekerjaanResolver, fileResolver]
 })
 
 export default schema

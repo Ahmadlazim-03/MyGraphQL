@@ -10,7 +10,70 @@ generator client {
 
 model User {
   id        Int      @id @default(autoincrement())
-  name      String
+  username  String?  @unique
+  email     String   @unique
+  password  String?
+  role      String   @default("user")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // Relations
+  alumni    Alumni?
+}
+
+model Mahasiswa {
+  id        Int      @id @default(autoincrement())
+  nim       String   @unique
+  nama      String
+  jurusan   String
+  angkatan  Int
   email     String   @unique
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Alumni {
+  id         Int                @id @default(autoincrement())
+  userId     Int                @unique
+  user       User               @relation(fields: [userId], references: [id])
+  nim        String             @unique
+  nama       String
+  jurusan    String
+  angkatan   Int
+  tahunLulus Int
+  noTelepon  String?
+  alamat     String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  pekerjaans PekerjaanAlumni[]
+}
+
+model PekerjaanAlumni {
+  id                  Int      @id @default(autoincrement())
+  alumniId            Int
+  alumni              Alumni   @relation(fields: [alumniId], references: [id])
+  namaPerusahaan      String
+  posisiJabatan       String
+  bidangIndustri      String
+  lokasiKerja         String
+  gajiRange           String?
+  tanggalMulaiKerja   DateTime
+  tanggalSelesaiKerja DateTime?
+  statusPekerjaan     String   @default("aktif")
+  deskripsiPekerjaan  String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  deletedAt           DateTime?
+}
+
+model File {
+  id           Int      @id @default(autoincrement())
+  fileName     String
+  originalName String?
+  filePath     String
+  fileSize     Int
+  fileType     String?
+  uploadedAt   DateTime @default(now())
 }

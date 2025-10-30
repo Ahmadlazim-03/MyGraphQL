@@ -1,0 +1,38 @@
+"""
+Alumni schema
+"""
+
+type Alumni {
+  id: Int!
+  userId: Int!
+  nim: String!
+  nama: String!
+  jurusan: String!
+  angkatan: Int!
+  tahunLulus: Int!
+  noTelepon: String
+  alamat: String
+  createdAt: String!
+  updatedAt: String!
+  pekerjaans: [PekerjaanAlumni!]
+}
+
+type Query {
+  alumnis: [Alumni!]!
+  alumni(id: Int!): Alumni
+}
+
+input CreateAlumniInput {
+  userId: Int!
+  nim: String!
+  nama: String!
+  jurusan: String!
+  angkatan: Int!
+  tahunLulus: Int!
+  noTelepon: String
+  alamat: String
+}
+
+type Mutation {
+  createAlumni(input: CreateAlumniInput!): Alumni!
+}

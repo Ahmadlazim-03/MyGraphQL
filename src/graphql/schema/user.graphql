@@ -5,9 +5,10 @@ Disimpan terpisah per fitur untuk modularitas.
 
 type User {
   id: Int!
-  name: String!
+  username: String!
   email: String!
   createdAt: String! # ISO timestamp
+  updatedAt: String!
 }
 
 type Query {
@@ -16,5 +17,5 @@ type Query {
 }
 
 type Mutation {
-  createUser(name: String!, email: String!): User!
+  createUser(username: String!, email: String!, password: String!): User!
 }

@@ -3,8 +3,9 @@ import type { Context } from '../context'
 
 // Zod schema untuk memastikan input bersih
 const CreateUserInput = z.object({
-  name: z.string().min(1),
-  email: z.string().email()
+  username: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(6)
 })
 
 const userResolver = {
@@ -19,18 +20,17 @@ const userResolver = {
     }
   },
   Mutation: {
-    createUser: async (_: any, args: { name: string; email: string }, ctx: Context) => {
+    createUser: async (_: any, args: { username: string; email: string; password: string }, ctx: Context) => {
       // Validasi input dengan zod
       const parsed = CreateUserInput.safeParse(args)
       if (!parsed.success) {
         // Bubuhkan pesan kesalahan yang jelas
         throw new Error('Invalid input: ' + JSON.stringify(parsed.error.flatten()))
       }
-
-      const { name, email } = parsed.data
+      const { username, email, password } = parsed.data
       try {
-        ctx.logger.info({ email }, 'Creating new user')
-        const user = await ctx.prisma.user.create({ data: { name, email } })
+          ctx.logger.info({ email }, 'Creating new user')
+          const user = await (ctx.prisma as any).user.create({ data: { username, email, password } })
         return user
       } catch (err: any) {
         // Tangani unique constraint error dari Prisma

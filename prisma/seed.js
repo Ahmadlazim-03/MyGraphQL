@@ -1,22 +1,6 @@
-const { PrismaClient } = require('@prisma/client')
+// Deprecated seed file
+// This seed script is kept for history but it's out of date with the current
+// Prisma schema (User.username replaces User.name). Use `scripts/seed-alumni.js`
+// or create a new seed that matches the current schema.
 
-const prisma = new PrismaClient()
-
-async function main() {
-  const users = [
-    { name: 'Budi', email: 'budi@example.com' },
-    { name: 'Siti', email: 'siti@example.com' }
-  ]
-
-  const result = await prisma.user.createMany({ data: users, skipDuplicates: true })
-  console.log('Seed completed:', result)
-}
-
-main()
-  .catch((e) => {
-    console.error(e)
-    process.exitCode = 1
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+console.warn('prisma/seed.js is deprecated — use scripts/seed-alumni.js or update this file to match the schema')

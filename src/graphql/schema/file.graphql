@@ -1,0 +1,30 @@
+"""
+File schema
+"""
+
+type File {
+  id: Int!
+  fileName: String!
+  originalName: String
+  filePath: String!
+  fileSize: Int!
+  fileType: String
+  uploadedAt: String!
+}
+
+type Query {
+  files: [File!]!
+  file(id: Int!): File
+}
+
+input CreateFileInput {
+  fileName: String!
+  originalName: String
+  filePath: String!
+  fileSize: Int!
+  fileType: String
+}
+
+type Mutation {
+  createFile(input: CreateFileInput!): File!
+}

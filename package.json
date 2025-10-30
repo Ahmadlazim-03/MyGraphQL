@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "migrate": "prisma migrate dev --name init",
+  "test:graphql": "node scripts/test-graphql.js",
     "prisma:generate": "prisma generate",
     "seed": "node prisma/seed.js",
     "prisma:studio": "prisma studio",
