@@ -1,0 +1,12 @@
+[
+  {
+    "ok": true,
+    "provider": "mongodb",
+    "connectTimeMs": 2677,
+    "sampleQueryMs": 466,
+    "usersCount": 2,
+    "timestamp": "2025-10-30T09:32:02.680Z",
+    "clientIp": "::1",
+    "requestDurationMs": 3145
+  }
+]
