@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
+import { Paper, TextInput, PasswordInput, Button, Title, Text, Container, Group } from '@mantine/core';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -31,34 +32,28 @@ export default function LoginPage() {
     }
   }
 
+  const G = Group as any;
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#e6eef8' }}>
-      <div style={{ width: 420, padding: 28, borderRadius: 12, background: 'linear-gradient(180deg,#0b1220, #071026)', boxShadow: '0 8px 30px rgba(2,6,23,0.6)' }}>
-        <h1 style={{ margin: 0, marginBottom: 12, fontSize: 20 }}>Sign in</h1>
-        <p style={{ marginTop: 0, marginBottom: 18, color: '#9fb0d6' }}>Masuk menggunakan akun admin untuk mengakses dashboard monitoring.</p>
+    <Container size={420} my={80}>
+      <Paper radius="md" p="xl" withBorder>
+        <Title order={2} style={{ marginBottom: 8 }}>Sign in</Title>
+        <Text color="dimmed" size="sm" mb={18}>Masuk menggunakan akun admin untuk mengakses dashboard monitoring.</Text>
 
         <form onSubmit={submit}>
-          <label style={{ display: 'block', marginBottom: 8 }}>
-            Email
-            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required style={{ width: '100%', padding: 10, marginTop: 6, borderRadius: 6, border: '1px solid #233040', background: '#071224', color: '#e6eef8' }} />
-          </label>
+          <TextInput label="Email" placeholder="you@example.com" required value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.currentTarget.value)} />
+          <PasswordInput label="Password" placeholder="Your password" required mt="md" value={password} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.currentTarget.value)} />
 
-          <label style={{ display: 'block', marginBottom: 8 }}>
-            Password
-            <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required style={{ width: '100%', padding: 10, marginTop: 6, borderRadius: 6, border: '1px solid #233040', background: '#071224', color: '#e6eef8' }} />
-          </label>
+          <G position="apart" mt="lg">
+            <Button variant="outline" onClick={() => { setEmail('ahmadlazim422@gmail.com'); setPassword('pembelajaranjarakjauh123'); }}>Fill demo</Button>
+            <Button type="submit" loading={loading}>Sign in</Button>
+          </G>
 
-          <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-            <button type="submit" disabled={loading} style={{ padding: '10px 14px', borderRadius: 8, background: '#0ea5a3', border: 'none', color: '#012', fontWeight: 600 }}>
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
-            <button type="button" onClick={() => { setEmail('ahmadlazim422@gmail.com'); setPassword('pembelajaranjarakjauh123'); }} style={{ padding: '10px 12px', borderRadius: 8, background: 'transparent', border: '1px solid #233040', color: '#9fb0d6' }}>Fill demo</button>
-          </div>
-          {error && <p style={{ color: '#ffb4b4' }}>{error}</p>}
+          {error && <Text color="red" size="sm" mt="sm">{error}</Text>}
         </form>
 
-        <p style={{ marginTop: 18, color: '#7f98bf', fontSize: 13 }}>Username: ahmadlazim422@gmail.com<br/>Password: pembelajaranjarakjauh123</p>
-      </div>
-    </div>
+        <Text color="dimmed" size="xs" mt="md">Username: ahmadlazim422@gmail.com · Password: pembelajaranjarakjauh123</Text>
+      </Paper>
+    </Container>
   );
 }

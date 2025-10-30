@@ -1,6 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import jwt from 'jsonwebtoken';
+import { Container, Grid, Card, Select, Textarea, Button, Title, Text, Table, Group, Badge, ScrollArea } from '@mantine/core';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title as ChartTitle,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, ChartTitle, Tooltip, Legend);
+const G = Group as any;
+const T = Text as any;
 
 type Config = { provider: 'postgres' | 'mongodb'; url: string };
 
@@ -101,116 +116,123 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ fontFamily: 'Inter, system-ui, -apple-system, Roboto, sans-serif', padding: 28, background: '#0b1220', minHeight: '100vh', color: '#e6eef8' }}>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-        <h1 style={{ margin: 0 }}>Monitoring Dashboard</h1>
+    <Container size="xl" py="xl">
+  <G position="apart" mb="md">
+        <Title order={2}>Monitoring Dashboard</Title>
         <div>
-          <a href="/api/auth/logout" style={{ color: '#9fb0d6', textDecoration: 'none', marginRight: 12 }}>Logout</a>
+          <a href="/api/auth/logout" style={{ color: '#268bd2', textDecoration: 'none' }}>Logout</a>
         </div>
-      </header>
+      </G>
 
-      <main style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: 20 }}>
-        <aside style={{ background: '#071026', padding: 18, borderRadius: 12 }}>
-          <h2 style={{ marginTop: 0, marginBottom: 10 }}>Database configuration</h2>
-          <label style={{ display: 'block', marginBottom: 8 }}>
-            Provider:
-            <select
+      <Grid>
+        <Grid.Col span={3}>
+          <Card shadow="sm" p="md">
+            <T weight={600} mb="xs">Database configuration</T>
+            <Select
+              label="Provider"
+              data={[{ value: 'postgres', label: 'Postgres' }, { value: 'mongodb', label: 'MongoDB' }]}
               value={config.provider}
-              onChange={(e) => setConfig((s) => ({ ...s, provider: e.target.value as any }))}
-              style={{ marginLeft: 8, marginTop: 6 }}
-            >
-              <option value="postgres">Postgres</option>
-              <option value="mongodb">MongoDB</option>
-            </select>
-          </label>
-
-          <label style={{ display: 'block', marginBottom: 8 }}>
-            Database URL:
-            <input
-              value={config.url}
-              onChange={(e) => setConfig((s) => ({ ...s, url: e.target.value }))}
-              placeholder="e.g. postgres://user:pass@host:5432/db or mongodb+srv://..."
-              style={{ display: 'block', width: '100%', marginTop: 6, padding: 10, borderRadius: 8, background: '#071224', border: '1px solid #183049', color: '#e6eef8' }}
+              onChange={(v) => setConfig((s) => ({ ...s, provider: (v as any) }))}
+              mb="sm"
             />
-          </label>
 
-          <div style={{ marginTop: 12 }}>
-            <button onClick={runCheck} disabled={loading} style={{ marginRight: 8, padding: '8px 12px', borderRadius: 8, background: '#0ea5a3', border: 'none', color: '#012' }}>
-              {loading ? 'Checking...' : 'Run check'}
-            </button>
-            <button onClick={saveConfig} style={{ padding: '8px 12px', borderRadius: 8, background: 'transparent', border: '1px solid #183049', color: '#9fb0d6' }}>Save</button>
-          </div>
-          {message && <p style={{ marginTop: 10, color: '#ffb4b4' }}>{message}</p>}
-        </aside>
+            <Textarea
+              label="Database URL"
+              placeholder="e.g. postgres://user:pass@host:5432/db or mongodb+srv://..."
+              minRows={3}
+              value={config.url}
+              onChange={(e) => setConfig((s) => ({ ...s, url: e.currentTarget.value }))}
+            />
 
-        <section style={{ background: '#071026', padding: 18, borderRadius: 12 }}>
-          <h2 style={{ marginTop: 0 }}>Result</h2>
-          {result ? (
-            <pre style={{ background: '#011012', color: '#aef0d6', padding: 12, borderRadius: 8, overflowX: 'auto' }}>{JSON.stringify(result, null, 2)}</pre>
-          ) : (
-            <p style={{ color: '#9fb0d6' }}>No result yet. Click "Run check" to measure connect time and a sample query.</p>
-          )}
+            <G mt="md">
+              <Button onClick={runCheck} loading={loading} color="teal">Run check</Button>
+              <Button variant="outline" onClick={saveConfig}>Save</Button>
+            </G>
 
-          <div style={{ marginTop: 18 }}>
-            <h3 style={{ marginBottom: 8 }}>Recent checks</h3>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <button onClick={fetchHistory} style={{ padding: '6px 10px', borderRadius: 6 }}>Refresh</button>
-              <button onClick={clearHistory} style={{ padding: '6px 10px', borderRadius: 6 }}>Clear history</button>
-            </div>
-            <div style={{ marginTop: 12 }}>
+            {message && <T color="red" mt="sm">{message}</T>}
+          </Card>
+        </Grid.Col>
+
+        <Grid.Col span={9}>
+          <Card shadow="sm" p="md">
+            <T weight={600} mb="xs">Result</T>
+            {result ? (
+              <ScrollArea style={{ maxHeight: 160 }}>
+                <pre style={{ background: '#f6f8fa', padding: 12, borderRadius: 6, overflowX: 'auto' }}>{JSON.stringify(result, null, 2)}</pre>
+              </ScrollArea>
+            ) : (
+              <T color="dimmed">No result yet. Click "Run check" to measure connect time and a sample query.</T>
+            )}
+
+            <G position="apart" mt="md">
+              <T weight={600}>Recent checks</T>
+              <G>
+                <Button variant="subtle" onClick={fetchHistory}>Refresh</Button>
+                <Button variant="subtle" color="red" onClick={clearHistory}>Clear history</Button>
+              </G>
+            </G>
+
+            <ScrollArea style={{ maxHeight: 240 }} mt="sm">
               {history.length === 0 ? (
-                <p style={{ color: '#9fb0d6' }}>No history yet.</p>
+                <T color="dimmed">No history yet.</T>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', color: '#cfeee0' }}>
-                  <thead style={{ textAlign: 'left', color: '#9fb0d6' }}>
+                <Table highlightOnHover>
+                  <thead>
                     <tr><th>Time</th><th>Provider</th><th>Connect ms</th><th>Query ms</th><th>Users</th></tr>
                   </thead>
                   <tbody>
                     {history.slice().reverse().slice(0, 12).map((h) => (
-                      <tr key={h.timestamp} style={{ borderTop: '1px solid #0b2430' }}>
-                        <td style={{ padding: '6px 8px' }}>{new Date(h.timestamp).toLocaleTimeString()}</td>
-                        <td style={{ padding: '6px 8px' }}>{h.provider}</td>
-                        <td style={{ padding: '6px 8px' }}>{h.connectTimeMs}</td>
-                        <td style={{ padding: '6px 8px' }}>{h.sampleQueryMs}</td>
-                        <td style={{ padding: '6px 8px' }}>{h.usersCount ?? '-'}</td>
+                      <tr key={h.timestamp}>
+                        <td>{new Date(h.timestamp).toLocaleTimeString()}</td>
+                        <td>{h.provider}</td>
+                        <td>{h.connectTimeMs}</td>
+                        <td>{h.sampleQueryMs}</td>
+                        <td>{h.usersCount ?? '-'}</td>
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </Table>
               )}
-            </div>
-            <div style={{ marginTop: 18 }}>
-              <h4 style={{ marginBottom: 8 }}>Daily checks (last 30 days)</h4>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 60 }}>
-                {stats.daily.map((d) => {
-                  const max = Math.max(1, ...stats.daily.map((x) => x.count));
-                  const h = Math.round((d.count / max) * 56);
-                  return (
-                    <div key={d.date} title={`${d.date}: ${d.count}`} style={{ width: 10, height: h, background: '#0ea5a3', borderRadius: 3 }} />
-                  );
-                })}
-              </div>
-            </div>
+            </ScrollArea>
 
-            <div style={{ marginTop: 12 }}>
-              <h4 style={{ marginBottom: 6 }}>Top client IPs</h4>
-              {stats.topIps.length === 0 ? <p style={{ color: '#9fb0d6' }}>No data</p> : (
-                <ul style={{ color: '#cfeee0' }}>
-                  {stats.topIps.map((t) => (<li key={t.ip}>{t.ip} — {t.count}</li>))}
-                </ul>
-              )}
-            </div>
-          </div>
+            <Grid mt="md">
+              <Grid.Col span={8}>
+                <T weight={600} mb="xs">Daily checks (last 30 days)</T>
+                <Bar
+                  data={{
+                    labels: stats.daily.map((d) => d.date),
+                    datasets: [{
+                      label: 'Checks',
+                      data: stats.daily.map((d) => d.count),
+                      backgroundColor: 'rgba(16,185,129,0.8)'
+                    }]
+                  }}
+                  options={{
+                    responsive: true,
+                    plugins: { legend: { display: false }, title: { display: false } },
+                    scales: { x: { display: false }, y: { beginAtZero: true } }
+                  }}
+                />
+              </Grid.Col>
 
-          <div style={{ marginTop: 18 }}>
-            <h3 style={{ marginBottom: 6 }}>Tips</h3>
-            <ul style={{ marginTop: 0, color: '#9fb0d6' }}>
+              <Grid.Col span={4}>
+                <T weight={600} mb="xs">Top client IPs</T>
+                {stats.topIps.length === 0 ? <Text color="dimmed">No data</Text> : (
+                  <div>
+                    {stats.topIps.map((t) => (<div key={t.ip}><Badge mr="xs">{t.count}</Badge> <Text span>{t.ip}</Text></div>))}
+                  </div>
+                )}
+              </Grid.Col>
+            </Grid>
+
+            <T mt="md" weight={600}>Tips</T>
+            <ul>
               <li>Install DB drivers on the server if the API reports a missing dependency.</li>
               <li>In production, configure DB credentials via environment variables (do not save to file).</li>
             </ul>
-          </div>
-        </section>
-      </main>
-    </div>
+          </Card>
+        </Grid.Col>
+      </Grid>
+    </Container>
   );
 }
