@@ -8,11 +8,23 @@ export interface GraphQLRequestLog {
   operationName?: string
   error?: string
   timestamp: Date
+  ipAddress?: string
+  userAgent?: string
+  browser?: string
+  os?: string
+  device?: string
+  country?: string
+  city?: string
 }
 
 // In-memory storage for recent requests (for real-time dashboard)
 const recentRequests: GraphQLRequestLog[] = []
 const MAX_RECENT_REQUESTS = 1000
+
+// Cache for metrics (avoid recalculating on every request)
+let metricsCache: any = null
+let metricsCacheTime = 0
+const METRICS_CACHE_TTL = 2000 // 2 seconds
 
 export async function logGraphQLRequest(log: GraphQLRequestLog) {
   try {
@@ -22,33 +34,59 @@ export async function logGraphQLRequest(log: GraphQLRequestLog) {
       recentRequests.pop()
     }
 
-    // Also save to MongoDB for persistence
-    const client = await connectMongoDB()
-    const db = client.db("monitoring")
-    const collection = db.collection("graphql_requests")
+    // Invalidate metrics cache
+    metricsCache = null
 
-    await collection.insertOne({
-      ...log,
-      createdAt: new Date(),
-      performanceLevel: log.duration > 500 ? "slow" : log.duration > 100 ? "medium" : "fast",
-      isError: log.status >= 400 || !!log.error,
+    // Save to MongoDB asynchronously (don't await)
+    saveToDatabaseAsync(log).catch((e) => {
+      console.error("Failed to save log to MongoDB:", e)
     })
-
-    // Keep only last 30 days
-    await collection.deleteMany({
-      createdAt: { $lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-    })
-
-    // Create index for better search performance
-    try {
-      await collection.createIndex({ createdAt: -1 })
-      await collection.createIndex({ status: 1 })
-      await collection.createIndex({ method: 1 })
-    } catch (e) {
-      // Index may already exist
-    }
   } catch (error) {
     console.error("Failed to log GraphQL request:", error)
+  }
+}
+
+async function saveToDatabaseAsync(log: GraphQLRequestLog) {
+  try {
+    const client = await connectMongoDB()
+    const db = (client as any).connection?.db ?? (client as any).db
+    
+    if (!db) {
+      const { MongoClient } = await import("mongodb")
+      const mongoClient = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017/mygraphql")
+      await mongoClient.connect()
+      const fallbackDb = mongoClient.db("monitoring")
+      const collection = fallbackDb.collection("graphql_requests")
+
+      await collection.insertOne({
+        ...log,
+        createdAt: new Date(),
+        performanceLevel: log.duration > 500 ? "slow" : log.duration > 100 ? "medium" : "fast",
+        isError: log.status >= 400 || !!log.error,
+      })
+
+      await mongoClient.close()
+    } else {
+      const collection = db.collection("graphql_requests")
+
+      await collection.insertOne({
+        ...log,
+        createdAt: new Date(),
+        performanceLevel: log.duration > 500 ? "slow" : log.duration > 100 ? "medium" : "fast",
+        isError: log.status >= 400 || !!log.error,
+      })
+
+      // Clean old data once per 100 inserts (probabilistic cleanup)
+      if (Math.random() < 0.01) {
+        collection
+          .deleteMany({
+            createdAt: { $lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+          })
+          .catch(() => {})
+      }
+    }
+  } catch (error) {
+    // Silent fail for monitoring - don't break the app
   }
 }
 
@@ -57,32 +95,45 @@ export function getRecentRequests(limit = 50): GraphQLRequestLog[] {
 }
 
 export async function getRequestMetrics() {
+  // Return cached metrics if still valid
+  const now = Date.now()
+  if (metricsCache && now - metricsCacheTime < METRICS_CACHE_TTL) {
+    return metricsCache
+  }
+
   const recent = recentRequests.slice(0, 100)
 
   if (recent.length === 0) {
-    return {
+    const emptyMetrics = {
       totalRequests: 0,
       averageResponseTime: 0,
       slowestRequest: 0,
       fastestRequest: 0,
       errorCount: 0,
-      errorRate: 0,
-      requestsPerSecond: 0,
+      errorRate: "0.00",
+      requestsPerSecond: "0.00",
     }
+    metricsCache = emptyMetrics
+    metricsCacheTime = now
+    return emptyMetrics
   }
 
   const durations = recent.map((r) => r.duration)
   const errorCount = recent.filter((r) => r.status >= 400 || r.error).length
 
-  return {
+  const metrics = {
     totalRequests: recent.length,
     averageResponseTime: Math.round(durations.reduce((a, b) => a + b, 0) / durations.length),
     slowestRequest: Math.max(...durations),
     fastestRequest: Math.min(...durations),
     errorCount,
     errorRate: ((errorCount / recent.length) * 100).toFixed(2),
-    requestsPerSecond: (recent.length / 10).toFixed(2), // Approximate based on recent 10 seconds
+    requestsPerSecond: (recent.length / 10).toFixed(2),
   }
+
+  metricsCache = metrics
+  metricsCacheTime = now
+  return metrics
 }
 
 export async function getRequestTimeline() {
@@ -103,6 +154,13 @@ export async function getRequestTimeline() {
         count: requests.length,
         avgDuration: Math.round(requests.reduce((a, b) => a + b.duration, 0) / requests.length),
       })
+    } else {
+      // Add empty point to show continuity
+      timeline.push({
+        time: new Date(end).toLocaleTimeString(),
+        count: 0,
+        avgDuration: 0,
+      })
     }
   }
 
@@ -110,10 +168,10 @@ export async function getRequestTimeline() {
 }
 
 export async function getErrorLog(limit = 50) {
-  const errors = recentRequests.filter((r) => r.error).slice(0, limit)
+  const errors = recentRequests.filter((r) => r.error || r.status >= 400).slice(0, limit)
   return errors.map((r) => ({
     timestamp: r.timestamp,
-    error: r.error,
+    error: r.error || `HTTP ${r.status}`,
     query: r.query,
     status: r.status,
   }))

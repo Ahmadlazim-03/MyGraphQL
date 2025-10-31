@@ -18,6 +18,14 @@ yarn-error.log*
 
 # env files
 .env*
+!.env.example
+
+# user credentials
+user-credentials.json
+
+# test files
+cookies.txt
+test-*.json
 
 # vercel
 .vercel

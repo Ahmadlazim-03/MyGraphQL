@@ -15,7 +15,7 @@ export function generateToken(payload: Omit<JWTPayload, "iat" | "exp">) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" })
 }
 
-export async function verifyToken(token: string): Promise<JWTPayload> {
+export function verifyToken(token: string): JWTPayload {
   return jwt.verify(token, JWT_SECRET) as JWTPayload
 }
 

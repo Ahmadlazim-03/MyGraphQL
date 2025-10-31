@@ -30,8 +30,19 @@ export async function recordUptime(record: UptimeRecord) {
     }
 
     const client = await connectMongoDB()
-    const db = client.db("monitoring")
-    const collection = db.collection("uptime_records")
+    const db = (client as any).connection?.db ?? (client as any).db
+    const collection = db ? db.collection("uptime_records") : null
+
+    if (!collection) {
+      // fallback to native MongoClient
+      const { MongoClient } = await import("mongodb")
+      const mongoClient = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017/mygraphql")
+      await mongoClient.connect()
+      const fallbackCollection = mongoClient.db("monitoring").collection("uptime_records")
+      await fallbackCollection.insertOne(record)
+      await mongoClient.close()
+      return
+    }
 
     await collection.insertOne(record)
 
@@ -78,8 +89,18 @@ export async function createIncident(incident: Omit<IncidentRecord, "id">) {
     incidents.set(id, fullIncident)
 
     const client = await connectMongoDB()
-    const db = client.db("monitoring")
-    const collection = db.collection("incidents")
+    const db = (client as any).connection?.db ?? (client as any).db
+    const collection = db ? db.collection("incidents") : null
+
+    if (!collection) {
+      const { MongoClient } = await import("mongodb")
+      const mongoClient = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017/mygraphql")
+      await mongoClient.connect()
+      const fallbackCollection = mongoClient.db("monitoring").collection("incidents")
+      await fallbackCollection.insertOne(fullIncident)
+      await mongoClient.close()
+      return fullIncident
+    }
 
     await collection.insertOne(fullIncident)
 
@@ -100,8 +121,18 @@ export async function resolveIncident(incidentId: string) {
     incident.resolved = true
 
     const client = await connectMongoDB()
-    const db = client.db("monitoring")
-    const collection = db.collection("incidents")
+    const db = (client as any).connection?.db ?? (client as any).db
+    const collection = db ? db.collection("incidents") : null
+
+    if (!collection) {
+      const { MongoClient } = await import("mongodb")
+      const mongoClient = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017/mygraphql")
+      await mongoClient.connect()
+      const fallbackCollection = mongoClient.db("monitoring").collection("incidents")
+      await fallbackCollection.updateOne({ id: incidentId }, { $set: { endTime: incident.endTime, duration: incident.duration, resolved: true } })
+      await mongoClient.close()
+      return incident
+    }
 
     await collection.updateOne(
       { id: incidentId },
@@ -128,8 +159,17 @@ export function getActiveIncidents(): IncidentRecord[] {
 export async function getIncidentHistory(limit = 20): Promise<IncidentRecord[]> {
   try {
     const client = await connectMongoDB()
-    const db = client.db("monitoring")
-    const collection = db.collection("incidents")
+    const db = (client as any).connection?.db ?? (client as any).db
+    const collection = db ? db.collection("incidents") : null
+
+    if (!collection) {
+      const { MongoClient } = await import("mongodb")
+      const mongoClient = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017/mygraphql")
+      await mongoClient.connect()
+      const incidents = await mongoClient.db("monitoring").collection("incidents").find({}).sort({ startTime: -1 }).limit(limit).toArray()
+      await mongoClient.close()
+      return incidents as IncidentRecord[]
+    }
 
     const incidents = await collection.find({}).sort({ startTime: -1 }).limit(limit).toArray()
 

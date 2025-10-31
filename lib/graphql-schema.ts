@@ -3,84 +3,58 @@ export const typeDefs = `
 
   type User {
     id: Int!
-    username: String!
+    username: String
     email: String!
     role: String!
     isActive: Boolean!
+    createdAt: String!
+    updatedAt: String!
   }
 
-  type Mahasiswa {
-    id: Int!
-    nim: String!
-    nama: String!
-    jurusan: String!
-    angkatan: Int!
-    email: String!
+  type MonitoringMetrics {
+    totalRequests: Int!
+    averageResponseTime: Float!
+    slowestRequest: Float!
+    fastestRequest: Float!
+    errorCount: Int!
+    errorRate: String!
+    requestsPerSecond: String!
   }
 
-  type Alumni {
-    id: Int!
-    nim: String!
-    nama: String!
-    jurusan: String!
-    angkatan: Int!
-    tahunLulus: Int!
-    email: String!
-    pekerjaans: [PekerjaanAlumni!]!
+  type TimelinePoint {
+    time: String!
+    count: Int!
+    avgDuration: Float!
   }
 
-  type PekerjaanAlumni {
-    id: Int!
-    namaPerusahaan: String!
-    posisiJabatan: String!
-    bidangIndustri: String!
-    lokasiKerja: String!
-    tanggalMulaiKerja: String!
-    tanggalSelesaiKerja: String
-    statusPekerjaan: String!
-  }
-
-  type MonitoringResult {
-    connectTimeMs: Int
-    sampleQueryMs: Int
-    ok: Boolean!
-    details: JSON
-  }
-
-  type AuthPayload {
-    token: String!
-    user: User!
+  type GraphQLRequest {
+    method: String!
+    duration: Float!
+    status: Int!
+    query: String
+    operationName: String
+    error: String
+    timestamp: String!
+    performanceLevel: String
+    isError: Boolean
+    ipAddress: String
+    userAgent: String
+    browser: String
+    os: String
+    device: String
+    country: String
+    city: String
   }
 
   type Query {
     me: User
-    mahasiswa(id: Int!): Mahasiswa
-    alumni(id: Int!): Alumni
-    searchMahasiswa(query: String!, limit: Int = 20): [Mahasiswa!]!
-    getMonitoringHistory(limit: Int = 50): [JSON!]!
-    analyticsDaily(rangeDays: Int = 30): [JSON!]!
+    monitoringMetrics: MonitoringMetrics!
+    requestTimeline: [TimelinePoint!]!
+    recentRequests(limit: Int = 50): [GraphQLRequest!]!
+    errorLog(limit: Int = 50): [GraphQLRequest!]!
   }
 
   type Mutation {
-    login(email: String!, password: String!): AuthPayload!
-    logout: Boolean!
-    runCheck(provider: String!, url: String!): MonitoringResult!
-    saveConfig(provider: String!, url: String!): Boolean!
-    createAlumni(input: AlumniInput!): Alumni!
-    updateAlumni(id: Int!, input: AlumniInput!): Alumni!
-    deleteAlumni(id: Int!): Boolean!
-  }
-
-  type Subscription {
-    realtime(channel: String!): JSON
-  }
-
-  input AlumniInput {
-    userId: Int!
-    nim: String!
-    nama: String!
-    jurusan: String!
-    angkatan: Int!
-    tahunLulus: Int!
+    ping: Boolean!
   }
 `

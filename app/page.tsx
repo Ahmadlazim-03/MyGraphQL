@@ -18,57 +18,44 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const query = `
-        mutation Login($email: String!, $password: String!) {
-          login(email: $email, password: $password) {
-            token
-            user {
-              id
-              username
-              email
-              role
-            }
-          }
-        }
-      `
-
-      const response = await fetch("/api/graphql", {
+      console.log("Attempting login...")
+      
+      // Direct login via REST API (faster & simpler than GraphQL)
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          query,
-          variables: { email, password },
-        }),
+        credentials: "include", // Important: ensure cookies are sent/received
+        body: JSON.stringify({ email, password }),
       })
 
+      console.log("Response status:", response.status)
       const data = await response.json()
+      console.log("Response data:", data)
 
-      if (data.errors) {
-        setError(data.errors[0]?.message || "Login failed")
+      if (!response.ok) {
+        console.error("Login failed:", data.error)
+        setError(data.error || "Login failed")
+        setLoading(false)
         return
       }
 
-      const { token } = data.data.login
-
-      // Set token in cookie via API
-      await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      })
-
-      router.push("/dashboard")
+      console.log("Login successful!")
+      
+      // Force a full page reload to dashboard to ensure middleware processes cookie
+      // This is more reliable than client-side navigation
+      window.location.href = "/dashboard"
+      
     } catch (err: any) {
+      console.error("Login error:", err)
       setError(err.message || "An error occurred")
-    } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-blue-600 via-blue-700 to-blue-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-lg shadow-2xl p-8">
           <div className="text-center mb-8">
@@ -86,7 +73,6 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                 required
               />
@@ -101,7 +87,6 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                 required
               />
@@ -120,7 +105,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-slate-600 text-sm mt-6">Demo credentials: admin@example.com / admin123</p>
+          {/* Removed demo credentials info for security/privacy */}
         </div>
       </div>
     </div>

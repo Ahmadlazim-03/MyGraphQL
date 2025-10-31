@@ -123,3 +123,22 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom utilities for dashboard animations and scrollbars */
+@layer utilities {
+  @keyframes blob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(20px, -10px) scale(1.05); }
+    66% { transform: translate(-15px, 10px) scale(0.98); }
+  }
+
+  .animate-blob { animation: blob 8s infinite; }
+  .animation-delay-2000 { animation-delay: 2s; }
+  .animation-delay-4000 { animation-delay: 4s; }
+
+  /* Smooth, minimal scrollbar for dark UI */
+  .custom-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); border-radius: 999px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+}

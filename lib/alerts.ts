@@ -28,10 +28,18 @@ export async function createAlert(alert: Omit<Alert, "id" | "createdAt">) {
 
     // Persist to MongoDB
     const client = await connectMongoDB()
-    const db = client.db("monitoring")
-    const collection = db.collection("alerts")
-
-    await collection.insertOne(fullAlert)
+    const db = (client as any).connection?.db ?? (client as any).db
+    if (!db) {
+      const { MongoClient } = await import("mongodb")
+      const mongoClient = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017/mygraphql")
+      await mongoClient.connect()
+      const fallbackCollection = mongoClient.db("monitoring").collection("alerts")
+      await fallbackCollection.insertOne(fullAlert)
+      await mongoClient.close()
+    } else {
+      const collection = db.collection("alerts")
+      await collection.insertOne(fullAlert)
+    }
 
     return fullAlert
   } catch (error) {
@@ -53,10 +61,13 @@ export async function acknowledgeAlert(alertId: string, userId?: string) {
 
     // Update in MongoDB
     const client = await connectMongoDB()
-    const db = client.db("monitoring")
-    const collection = db.collection("alerts")
-
-    await collection.updateOne(
+    const db = (client as any).connection?.db ?? (client as any).db
+    if (!db) {
+      const { MongoClient } = await import("mongodb")
+      const mongoClient = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017/mygraphql")
+      await mongoClient.connect()
+      const fallbackCollection = mongoClient.db("monitoring").collection("alerts")
+      await fallbackCollection.updateOne(
       { id: alertId },
       {
         $set: {
@@ -65,6 +76,19 @@ export async function acknowledgeAlert(alertId: string, userId?: string) {
         },
       },
     )
+      await mongoClient.close()
+    } else {
+      const collection = db.collection("alerts")
+      await collection.updateOne(
+        { id: alertId },
+        {
+          $set: {
+            acknowledgedAt: new Date(),
+            acknowledgedBy: userId,
+          },
+        },
+      )
+    }
 
     return alert
   } catch (error) {
@@ -84,10 +108,13 @@ export async function resolveAlert(alertId: string) {
     activeAlerts.set(alertId, alert)
 
     const client = await connectMongoDB()
-    const db = client.db("monitoring")
-    const collection = db.collection("alerts")
-
-    await collection.updateOne(
+    const db = (client as any).connection?.db ?? (client as any).db
+    if (!db) {
+      const { MongoClient } = await import("mongodb")
+      const mongoClient = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017/mygraphql")
+      await mongoClient.connect()
+      const fallbackCollection = mongoClient.db("monitoring").collection("alerts")
+      await fallbackCollection.updateOne(
       { id: alertId },
       {
         $set: {
@@ -95,6 +122,18 @@ export async function resolveAlert(alertId: string) {
         },
       },
     )
+      await mongoClient.close()
+    } else {
+      const collection = db.collection("alerts")
+      await collection.updateOne(
+        { id: alertId },
+        {
+          $set: {
+            resolvedAt: new Date(),
+          },
+        },
+      )
+    }
 
     // Remove from active alerts after 1 hour
     setTimeout(
@@ -122,7 +161,16 @@ export function getAlertById(id: string): Alert | undefined {
 export async function getAlertHistory(limit = 100): Promise<Alert[]> {
   try {
     const client = await connectMongoDB()
-    const db = client.db("monitoring")
+    const db = (client as any).connection?.db ?? (client as any).db
+    if (!db) {
+      const { MongoClient } = await import("mongodb")
+      const mongoClient = new MongoClient(process.env.MONGODB_URI || "mongodb://localhost:27017/mygraphql")
+      await mongoClient.connect()
+      const alerts = await mongoClient.db("monitoring").collection("alerts").find({}).sort({ createdAt: -1 }).limit(limit).toArray()
+      await mongoClient.close()
+      return alerts as Alert[]
+    }
+
     const collection = db.collection("alerts")
 
     const alerts = await collection.find({}).sort({ createdAt: -1 }).limit(limit).toArray()

@@ -45,7 +45,7 @@ export default function StatusPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+  <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
           <Zap className="w-12 h-12 text-blue-400 mx-auto mb-4 animate-pulse" />
           <p className="text-white text-lg">Loading database status...</p>
@@ -59,7 +59,7 @@ export default function StatusPage() {
   const allConnected = pgConnected && mongoConnected
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+  <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">MyGraphQL Database Status</h1>

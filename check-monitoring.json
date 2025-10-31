@@ -1,0 +1,3 @@
+{
+  "query": "query GetMonitoring { recentRequests(limit: 5) { timestamp ipAddress browser os device country city operationName duration status } }"
+}
