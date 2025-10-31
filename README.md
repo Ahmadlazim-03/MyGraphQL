@@ -1,94 +1,185 @@
-# MyGraphQL - GraphQL API (Next.js + GraphQL Yoga + Prisma)
+# MyGraphQL - Monitoring & Alumni Management System
 
-Deskripsi singkat (Bahasa Indonesia):
+A full-stack Next.js application for managing monitoring tasks and alumni data with GraphQL API, JWT authentication, and real-time updates.
 
-- Backend GraphQL modular menggunakan Next.js API Routes (serverless) + GraphQL Yoga.
-- ORM: Prisma; Database: PostgreSQL (Railway).
-- Input validation: Zod.
-- Logging: Pino.
+## Features
 
-Fitur minimal: Demo CRUD User (query users, user, mutation createUser).
+- 🔐 JWT-based Authentication with httpOnly cookies
+- 📊 Monitoring System with performance metrics
+- 👥 Alumni & Mahasiswa Management with CRUD operations
+- 📈 Real-time Analytics and Activity Logging
+- 🚀 GraphQL API with Subscriptions support
+- 💾 PostgreSQL (Prisma ORM) + MongoDB (Mongoose)
+- 🎨 Modern UI with Tailwind CSS v4
 
-Persyaratan
-- Node.js 18+ (disarankan)
-- PostgreSQL (Railway) — gunakan DATABASE_URL di `.env`.
+## Tech Stack
 
-Quickstart (lokal)
+- **Frontend/API**: Next.js 14 + TypeScript
+- **Database**: PostgreSQL (Prisma) + MongoDB (Mongoose)
+- **GraphQL**: GraphQL Yoga with Subscriptions
+- **Authentication**: JWT with httpOnly cookies
+- **Styling**: Tailwind CSS v4
+- **Runtime**: Node.js
 
-1) Salin `.env.example` menjadi `.env` dan sesuaikan jika perlu.
+## Environment Variables
 
-2) Install dependency:
+\`\`\`env
+# PostgreSQL
+DATABASE_URL="postgresql://user:password@localhost:5432/mygraphql_db"
 
-```powershell
+# MongoDB
+MONGODB_URI="mongodb://localhost:27017/mygraphql"
+
+# JWT
+JWT_SECRET="your-super-secret-jwt-key-change-in-production"
+
+# App
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NODE_ENV="development"
+\`\`\`
+
+## Setup & Installation
+
+### 1. Install Dependencies
+\`\`\`bash
 npm install
-```
+\`\`\`
 
-3) Generate Prisma client & migrate:
+### 2. Setup Databases
 
-```powershell
-npm run prisma:generate
+**PostgreSQL:**
+\`\`\`bash
+# Create database
+createdb mygraphql_db
+
+# Run migrations
 npm run migrate
-```
+\`\`\`
 
-4) Jalankan dev server:
+**MongoDB:**
+\`\`\`bash
+# MongoDB should be running locally or via Docker
+# mongod --dbpath /path/to/db
+\`\`\`
 
-```powershell
+### 3. Seed Database
+\`\`\`bash
+npm run seed
+\`\`\`
+
+### 4. Run Development Server
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
-GraphQL playground tersedia di http://localhost:3000/api/graphql (hanya di mode development).
+Visit `http://localhost:3000`
 
-Contoh query
+**Demo Credentials:**
+- Email: `admin@example.com`
+- Password: `admin123`
 
-Query semua user:
+## API Endpoints
 
-```graphql
-query {
-  users {
-    id
-    name
-    email
-    createdAt
-  }
-}
-```
+### GraphQL
+- `POST /api/graphql` - GraphQL endpoint
 
-Mutation buat user:
+### Authentication
+- `POST /api/auth/login` - Set auth cookie
+- `POST /api/auth/logout` - Clear auth cookie
 
-```graphql
-mutation {
-  createUser(name: "Budi", email: "budi@example.com") {
-    id
-    name
-    email
-  }
-}
-```
+## Available Scripts
 
-Catatan penting arsitektur
+\`\`\`bash
+# Development
+npm run dev
 
-- Prisma singleton pattern (lihat `src/lib/prisma.ts`) mencegah kebocoran koneksi pada environment serverless.
-- Context GraphQL (`src/graphql/context.ts`) menginjeksi `prisma` dan `logger` ke resolver.
-- Schema dipecah per fitur (`src/graphql/schema/*.graphql`) dan resolvers per fitur (`src/graphql/resolvers/*`).
-- Validasi input dilakukan menggunakan Zod di resolver.
+# Build
+npm run build
 
-Deploy ke Vercel
+# Production
+npm start
 
-1) Push repo ke GitHub.
-2) Buat project di Vercel, pilih repository.
-3) Tambahkan Environment Variable `DATABASE_URL` di Settings Project di Vercel.
-4) Deploy — Vercel akan menjalankan `npm run build`.
+# Type checking
+npm run typecheck
 
-Tips performa & kehandalan
+# Database migrations
+npm run migrate
 
-- Pastikan `DATABASE_URL` dari Railway mendukung koneksi serverless (perhatikan pool & proxy). Kami menggunakan Prisma singleton untuk meminimalkan koneksi berlebih.
-- Untuk traffic tinggi, pertimbangkan connection pooling atau secondary database layer.
+# Seed data
+npm run seed
+\`\`\`
 
-Next steps / Pengembangan lebih jauh
+## Project Structure
 
-- Tambah DataLoader untuk N+1 problem.
-- Pisah schema menjadi modul lebih banyak saat fitur bertambah.
-- Tambah test unit/integration untuk resolver.
+\`\`\`
+.
+├── pages/
+│   ├── index.tsx           # Login page
+│   ├── dashboard.tsx       # Dashboard
+│   ├── mahasiswa.tsx       # Mahasiswa CRUD
+│   ├── alumni.tsx          # Alumni CRUD
+│   ├── api/
+│   │   ├── graphql.ts      # GraphQL endpoint
+│   │   └── auth/
+│   │       ├── login.ts
+│   │       └── logout.ts
+├── components/
+│   ├── layout.tsx          # Main layout with sidebar
+│   ├── dashboard/          # Dashboard components
+│   ├── mahasiswa/          # Mahasiswa components
+│   └── alumni/             # Alumni components
+├── lib/
+│   ├── auth.ts             # Auth utilities
+│   ├── db.ts               # Prisma client
+│   ├── mongodb.ts          # MongoDB connection
+│   ├── graphql-schema.ts   # GraphQL type definitions
+│   └── resolvers.ts        # GraphQL resolvers
+├── models/
+│   ├── activityLog.ts      # MongoDB ActivityLog
+│   ├── analytics.ts        # MongoDB Analytics
+│   └── realtimeUpdate.ts   # MongoDB RealtimeUpdate
+├── prisma/
+│   └── schema.prisma       # Prisma schema
+└── middleware.ts           # Authentication middleware
+\`\`\`
 
---
-Arsitek Backend
+## GraphQL Schema
+
+### Queries
+- `me` - Get current user
+- `mahasiswa(id)` - Get mahasiswa by ID
+- `alumni(id)` - Get alumni by ID
+- `searchMahasiswa(query, limit)` - Search mahasiswa
+- `getMonitoringHistory(limit)` - Get monitoring logs
+- `analyticsDaily(rangeDays)` - Get analytics data
+
+### Mutations
+- `login(email, password)` - User login
+- `logout` - User logout
+- `runCheck(provider, url)` - Run monitoring check
+- `saveConfig(provider, url)` - Save config
+- `createAlumni(input)` - Create alumni
+- `updateAlumni(id, input)` - Update alumni
+- `deleteAlumni(id)` - Delete alumni
+
+## Security
+
+- Passwords are hashed with bcrypt
+- JWT tokens stored in httpOnly cookies
+- CORS and CSRF protection enabled
+- Middleware validates all protected routes
+- Row-level security concepts applied
+
+## Future Enhancements
+
+- [ ] GraphQL Subscriptions for real-time updates
+- [ ] WebSocket support for live monitoring
+- [ ] Redis caching layer
+- [ ] Advanced analytics dashboard
+- [ ] File upload for documents
+- [ ] Email notifications
+- [ ] Two-factor authentication
+
+## License
+
+MIT

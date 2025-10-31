@@ -1,33 +1,59 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
     "lib": [
+      "ES2020",
       "DOM",
-      "DOM.Iterable",
-      "ES2020"
+      "DOM.Iterable"
     ],
-    "allowJs": false,
-    "skipLibCheck": true,
-    "strict": true,
-    "moduleResolution": "Node",
+    "jsx": "preserve",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "isolatedModules": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "preserve",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
     "baseUrl": ".",
-    "types": [
-      "node"
-    ],
-    "paths": {},
-    "incremental": true
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@/pages/*": [
+        "./pages/*"
+      ],
+      "@/components/*": [
+        "./components/*"
+      ],
+      "@/lib/*": [
+        "./lib/*"
+      ],
+      "@/models/*": [
+        "./models/*"
+      ]
+    },
+    "allowJs": true,
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.mjs",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

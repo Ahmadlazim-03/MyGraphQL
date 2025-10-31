@@ -1,79 +1,68 @@
-// Prisma schema untuk entitas User
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String?  @unique
-  email     String   @unique
-  password  String?
-  role      String   @default("user")
-  isActive  Boolean  @default(true)
+  id        Int     @id @default(autoincrement())
+  username  String  @unique
+  email     String  @unique
+  password  String
+  role      String  @default("user") // admin, user
+  isActive  Boolean @default(true)
   createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  updatedAt DateTime @updatedAt
 
-  // Relations
-  alumni    Alumni?
+  mahasiswa Mahasiswa[]
+  alumni    Alumni[]
 }
 
 model Mahasiswa {
-  id        Int      @id @default(autoincrement())
-  nim       String   @unique
+  id        Int     @id @default(autoincrement())
+  nim       String  @unique
   nama      String
   jurusan   String
   angkatan  Int
-  email     String   @unique
+  email     String
+  userId    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Alumni {
-  id         Int                @id @default(autoincrement())
-  userId     Int                @unique
-  user       User               @relation(fields: [userId], references: [id])
-  nim        String             @unique
+  id         Int      @id @default(autoincrement())
+  nim        String   @unique
   nama       String
   jurusan    String
   angkatan   Int
   tahunLulus Int
-  noTelepon  String?
-  alamat     String?
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
+  email      String
+  userId     Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   pekerjaans PekerjaanAlumni[]
 }
 
 model PekerjaanAlumni {
   id                  Int      @id @default(autoincrement())
   alumniId            Int
-  alumni              Alumni   @relation(fields: [alumniId], references: [id])
   namaPerusahaan      String
   posisiJabatan       String
   bidangIndustri      String
   lokasiKerja         String
-  gajiRange           String?
-  tanggalMulaiKerja   DateTime
-  tanggalSelesaiKerja DateTime?
+  tanggalMulaiKerja   String
+  tanggalSelesaiKerja String?
   statusPekerjaan     String   @default("aktif")
-  deskripsiPekerjaan  String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
-  deletedAt           DateTime?
-}
 
-model File {
-  id           Int      @id @default(autoincrement())
-  fileName     String
-  originalName String?
-  filePath     String
-  fileSize     Int
-  fileType     String?
-  uploadedAt   DateTime @default(now())
+  alumni Alumni @relation(fields: [alumniId], references: [id], onDelete: Cascade)
 }
